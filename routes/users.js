@@ -25,7 +25,7 @@ router.post("/signup",(req,res) =>{
   //Check if user is already registered
   User.findOne({ mail: { $regex: new RegExp(req.body.mail, 'i') } })
   .then(data =>{
-    if(data === null){
+    if(!data){
       //hash password with bcrypt
       const hash = bcrypt.hashSync(req.body.password,10)
       // user is not yet registered
@@ -85,10 +85,10 @@ router.get("/checkToken/:token", (req,res)=>{
   User.findOne({ token: req.params.token })
     .then(data =>{ 
       if(data){
-      //user found
+      //token found
       res.json({ result: true })
     }else{
-      //user does not exist
+      //token does not exist
       res.json({ result: false, error:"User not found" })
     }
   
