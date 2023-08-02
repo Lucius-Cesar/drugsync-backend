@@ -7,7 +7,7 @@ const {checkBody} = require("../modules/checkBody")
 const bcrypt = require("bcrypt")
 const uid2 = require("uid2")
 
-// mis en place de la route SignUp grace a la route Post
+
 
 router.post("/signup",(req,res) =>{
   // Check if signUp data is Valid
@@ -18,7 +18,7 @@ router.post("/signup",(req,res) =>{
     "password",
     "adress",
     "profession"])){
-    res.json({ result: false, error: "Missing or empty fields"})
+    res.json({ result: false, error: "Missing , empty or incorrect field"})
     return
   }
 
@@ -89,7 +89,7 @@ router.get("/checkToken/:token", (req,res)=>{
       res.json({ result: true })
     }else{
       //token does not exist
-      res.json({ result: false, error:"User not found" })
+      res.json({ result: false, error:"Token not found" })
     }
   
   })
