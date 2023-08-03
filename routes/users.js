@@ -94,8 +94,5 @@ router.get("/checkToken/:token", (req,res)=>{
   
   })
    
-  })
-
-// interaction
-  
+  })  
 module.exports = router;

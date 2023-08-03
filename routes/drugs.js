@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
-const Drug = require("../models/drugs")
+const Drug = require("../models/drugs");
+const { checkBody } = require('../modules/checkBody');
 
 // Helpers
 
@@ -11,8 +12,7 @@ function unique(arr) {
 }
 
 async function getRxNavData(drug){
-     // rxcui
-     const rxcuiFetch = await fetch(`https://rxnav.nlm.nih.gov/REST/Prescribe/rxcui.json?name=${drug}`)
+     const rxcuiFetch = await fetch(`https://rxnav.nlm.nih.gov/REST/Prescribe/rxcui.json?name=${drug}&search=2`)
      const rxcuiResponse =  await rxcuiFetch.json()
      const rxcui = rxcuiResponse.idGroup.rxnormId ? rxcuiResponse.idGroup.rxnormId[0] : null
 
@@ -100,6 +100,12 @@ async function getNewDrugData(drug){
 
 //Routes
 router.post('/', async function(req, res, next) {
+    if(!checkBody(req.body, 
+        ["drug"]
+      )){
+        res.json({ result: false, error: "Body field is incorrect"})
+        return
+      }
     drugPattern =  new RegExp(req.body.drug, 'i')
 
     //find by Rxnorm Name
