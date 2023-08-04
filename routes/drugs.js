@@ -2,14 +2,7 @@ var express = require('express');
 var router = express.Router();
 const Drug = require("../models/drugs");
 const { checkBody } = require('../modules/checkBody');
-
-// Helpers
-
-// keep only unique element in an array
-function unique(arr) {
-    const uniqueSet = new Set(arr);
-    return Array.from(uniqueSet);
-}
+const {unique} = require('../modules/utils')
 
 async function getRxNavData(drug){
      const rxcuiFetch = await fetch(`https://rxnav.nlm.nih.gov/REST/Prescribe/rxcui.json?name=${drug}&search=2`)
