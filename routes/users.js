@@ -1,98 +1,148 @@
-var express = require('express');
+var express = require("express");
 var router = express.Router();
 
-const User = require("../models/users")
-const {checkBody} = require("../modules/checkBody")
+const User = require("../models/users");
+const { checkBody } = require("../modules/checkBody");
 
-const bcrypt = require("bcrypt")
-const uid2 = require("uid2")
+const bcrypt = require("bcrypt");
+const uid2 = require("uid2");
 
-
-
-router.post("/signup",(req,res) =>{
+router.post("/signup", (req, res) => {
   // Check if signUp data is Valid
-  if(!checkBody(req.body, [
-    "firstname",
-    "lastname",
-    "mail",
-    "password",
-    "adress",
-    "profession"])){
-    res.json({ result: false, error: "Missing , empty or incorrect field"})
-    return
+  if (
+    !checkBody(req.body, [
+      "firstname",
+      "lastname",
+      "mail",
+      "password",
+      "adress",
+      "profession",
+    ])
+  ) {
+    res.json({ result: false, error: "Missing , empty or incorrect field" });
+    return;
   }
 
   //Check if user is already registered
-  User.findOne({ mail: { $regex: new RegExp(req.body.mail, 'i') } })
-  .then(data =>{
-    if(!data){
-      //hash password with bcrypt
-      const hash = bcrypt.hashSync(req.body.password,10)
-      // user is not yet registered
-      const newUser = new User({
-        firstname: req.body.firstname,
-        lastname: req.body.lastname,
-        mail: req.body.mail,
-        password: hash,
-        adress: req.body.adress,
-        profession: req.body.profession,
-        token: uid2(32)
-      })
+  User.findOne({ mail: { $regex: new RegExp(req.body.mail, "i") } }).then(
+    (data) => {
+      if (!data) {
+        //hash password with bcrypt
+        const hash = bcrypt.hashSync(req.body.password, 10);
+        // user is not yet registered
+        const newUser = new User({
+          firstname: req.body.firstname,
+          lastname: req.body.lastname,
+          mail: req.body.mail,
+          password: hash,
+          adress: req.body.adress,
+          profession: req.body.profession,
+          token: uid2(32),
+        });
 
-      newUser.save()
-      .then( newDoc =>{
-        res.json({ result: true, token: newDoc.token }) //au moment de l'inscription et de la connection on retourne le token pour qu'il puisse utiliser le toker pour naviguer et communiquer avec le backend
-      })
-
-    } else{
-      // user is already registered
-      res.json({ result: false, error: "Mail already exists"})
+        newUser.save().then((newDoc) => {
+          res.json({ result: true, token: newDoc.token }); //au moment de l'inscription et de la connection on retourne le token pour qu'il puisse utiliser le toker pour naviguer et communiquer avec le backend
+        });
+      } else {
+        // user is already registered
+        res.json({ result: false, error: "Mail already exists" });
+      }
     }
-  })
-
-
-})
+  );
+});
 
 // mis en place de la route SignIn grace a la route Post
 
-router.post("/signin",(req,res) =>{
+router.post("/signin", (req, res) => {
   // Check if signIn data is Valid
-  if(!checkBody(req.body, [
-    "mail",
-    "password"
-  ])){
-    res.json({ result: false, error: "Missing or empty fields"})
-    return
+  if (!checkBody(req.body, ["mail", "password"])) {
+    res.json({ result: false, error: "Missing or empty fields" });
+    return;
   }
 
   User.findOne({
-    mail: { $regex: new RegExp(req.body.mail, 'i') },
-    
-  })
-  .then(data =>{
+    mail: { $regex: new RegExp(req.body.mail, "i") },
+  }).then((data) => {
     // mail is registered
-    if (data  && bcrypt.compareSync(req.body.password, data.password)){
-    res.json({ result: true, token: data.token})
-  } else{
-    // mail was not found in DB
-    res.json({ result: false, error:"Mail not found or wrong password"})
-  }
-  })
-  
-})
-
-router.get("/checkToken/:token", (req,res)=>{
-  User.findOne({ token: req.params.token })
-    .then(data =>{ 
-      if(data){
-      //token found
-      res.json({ result: true })
-    }else{
-      //token does not exist
-      res.json({ result: false, error:"Token not found" })
+    if (data && bcrypt.compareSync(req.body.password, data.password)) {
+      res.json({ result: true, token: data.token });
+    } else {
+      // mail was not found in DB
+      res.json({ result: false, error: "Mail not found or wrong password" });
     }
-  
-  })
-   
-  })  
+  });
+});
+
+router.get("/checkToken/:token", (req, res) => {
+  User.findOne({ token: req.params.token }).then((data) => {
+    if (data) {
+      //token found
+      res.json({ result: true });
+    } else {
+      //token does not exist
+      res.json({ result: false, error: "Token not found" });
+    }
+  });
+});
+
+router.get("/mail/:mail", (req, res) => {
+  User.findOne({ mail: { $regex: new RegExp(req.params.mail, "i") } }).then(
+    (data) => {
+      if (data) {
+        res.json({
+          result: true,
+          userInfos: {
+            lastname: data.lastname,
+            firstname: data.firstname,
+            adress: data.adress,
+            profession: data.profession,
+          },
+        });
+      } else {
+        res.json({ result: false, error: "user doesn't exist" });
+      }
+    }
+  );
+});
+
+router.post("/updateMail", (req, res) => {
+  if (!checkBody(req.body, ["currentMail", "newMail"])) {
+    res.json({ result: false, error: "Missing or empty fields" });
+    return;
+  }
+  User.findOne({
+    mail: { $regex: new RegExp(req.body.currentMail, "i") },
+  }).then((data) => {
+    if (data) {
+      User.updateOne(
+        { mail: { $regex: new RegExp(req.body.currentMail, "i") } },
+        { $set: { mail: req.body.newMail } }
+      ).then((updateResult) => {
+        if (updateResult.modifiedCount > 0) {
+          res.json({ result: true, newMail: updateResult.newMail });
+        } else {
+          res.json({
+            result: false,
+            error: "Failed to update email",
+          });
+        }
+      });
+    }
+  });
+});
+
+router.post("/updateAdress", (req, res) => {
+  if (!checkBody(req.body, ["mail", "newAdress"])) {
+    res.json({ result: false, error: "Missing or empty fields" });
+    return;
+  }
+  User.updateOne({ mail: req.body.mail }, { adress: req.body.newAdress }).then(
+    (data) => {
+      if (data.modifiedCount > 0) {
+        res.json({ result: true, newAdress: req.body.newAdress });
+      }
+    }
+  );
+});
+
 module.exports = router;
