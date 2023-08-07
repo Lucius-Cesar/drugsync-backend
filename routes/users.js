@@ -24,6 +24,7 @@ router.post("/signup", (req, res) => {
   }
 
   //Check if user is already registered
+  // le i dans le RegExp fait en sorte que ça soit insenssible a la casse
   User.findOne({ mail: { $regex: new RegExp(req.body.mail, "i") } }).then(
     (data) => {
       if (!data) {

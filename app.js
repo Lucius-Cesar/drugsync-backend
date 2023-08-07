@@ -12,6 +12,7 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var drugsRouter = require('./routes/drugs');
 var interactionsRouter = require('./routes/interactions');
+var patientsRouter = require('./routes/patients');
 
 
 var app = express();
@@ -28,6 +29,7 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/drugs', drugsRouter);
 app.use('/interactions', interactionsRouter);
+app.use('/patients',patientsRouter);
 
 
 
