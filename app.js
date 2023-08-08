@@ -12,6 +12,8 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var drugsRouter = require('./routes/drugs');
 var interactionsRouter = require('./routes/interactions');
+var pathologiesRouter = require('./routes/pathologies');
+
 
 
 var app = express();
@@ -28,6 +30,8 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/drugs', drugsRouter);
 app.use('/interactions', interactionsRouter);
+app.use('/pathologies', pathologiesRouter);
+
 
 
 

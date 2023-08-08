@@ -1,9 +1,32 @@
 const fs = require('fs');
 const Papa = require('papaparse');
 
-function mergeFiles(filePaths, outputFilePath) {
+function csvToJsonAndReformat(csvFile, fileName) {
+  Papa.parse(csvFile, {
+    header: true,
+    complete: function(results) {
+
+      results.data.forEach((row) => {
+
+        row.DDinterDrugs = [row.drugA, row.drugB];
+
+        delete row.drugA;
+        delete row.drugB;
+        delete row.DDInterID_A
+        delete row.DDInterID_B
+
+      });
+
+      const jsonData = JSON.stringify(results.data, null, 2);
+      fs.writeFileSync(fileName, jsonData, 'utf8');
+
+    }
+  });
+}
+
+function mergeFiles(filePaths,) {
   const mergedContent = [];
-  header = "DDInterIDA,drugA,DDInterID_B,drugB,severity"
+  header = "DDInterID_A,drugA,DDInterID_B,drugB,severity"
   mergedContent.push(header)
 
   for (let i = 0; i < filePaths.length; i++) {
@@ -13,8 +36,7 @@ function mergeFiles(filePaths, outputFilePath) {
   }
 
   const mergedText = mergedContent.join('\n');
-  fs.writeFileSync(outputFilePath, mergedText, 'utf8');
-  console.log('CSV complete file created');
+  return(mergedText)
 }
 
 const filesToMerge = [
@@ -29,5 +51,5 @@ const filesToMerge = [
   ];
 
 
-mergeFiles(filesToMerge, 'DDinter.csv');
-  
+const csvFile = mergeFiles(filesToMerge);
+csvToJsonAndReformat(csvFile, "DDinter.json")
