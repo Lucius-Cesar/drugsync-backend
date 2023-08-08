@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 const Drug = require("../models/drugs");
 const { checkBody } = require('../modules/checkBody');
-const {unique} = require('../modules/utils')
+const {unique, capitalizeFirstLetter} = require('../modules/utils')
 
 async function getRxNavData(drug){
      const rxcuiFetch = await fetch(`https://rxnav.nlm.nih.gov/REST/Prescribe/rxcui.json?name=${drug}&search=2`)
@@ -72,11 +72,11 @@ async function getNewDrugData(drug){
     if(!rxNav && !chemblJson){ // if no rxnorm et no data entry return nothing
         return
     }
-    chemblSynonyms = chemblJson.molecule_synonyms ? chemblJson.molecule_synonyms : null
+    const chemblSynonyms = chemblJson.molecule_synonyms ? chemblJson.molecule_synonyms : null
     
-    fdaName = chemblSynonyms ? chemblSynonyms.find(item => item.syn_type === "FDA").molecule_synonym : null
+    const pref_name = chemblJson.pref_name
     const drugData = {
-        name: fdaName ? fdaName : rxNav.rxNorm,
+        name: pref_name ? capitalizeFirstLetter(pref_name) : rxNav.rxNorm,
         rxNav: [{
             rxcui: rxNav.rxcui, // Handle multiple rxNorm per molecule will be done later
             rxNorm: rxNav.rxNorm
@@ -90,6 +90,28 @@ async function getNewDrugData(drug){
     return(drugData )
 }
 
+// use it instead if you have chemblId first
+async function getDrugDataBasedOnChemblId(chemblId){
+    const chemblFetch = await fetch(`https://www.ebi.ac.uk/chembl/api/data/molecule/${chemblId}.json`)
+    const chemblJson = await chemblFetch.json()
+    const chemblSynonyms = chemblJson.molecule_synonyms ? chemblJson.molecule_synonyms : null
+    const pref_name = chemblJson.pref_name
+    const rxNav = await getRxNavData(drugName)
+    const drugData = {
+        name: pref_name,
+        rxNav: [{
+            rxcui: rxNav.rxcui, // Handle multiple rxNorm per molecule will be done later
+            rxNorm: rxNav.rxNorm
+        }],
+        chemblId: chemblJson.molecule_chembl_id ? chemblJson.molecule_chembl_id : "",
+        synonyms: chemblSynonyms ? unique(chemblSynonyms.filter(synonym => (synonym.syn_type !== "TRADE_NAME")).map(item => item.molecule_synonym))  : [],
+        tradeNames: chemblSynonyms ? unique(chemblSynonyms.filter(synonym => (synonym.syn_type === "TRADE_NAME")).map(item => item.molecule_synonym)) : [],
+        drugbank: "",
+        DDinter: "" // empty for the moment
+    }
+    console.log(drugData)
+    return(drugData)
+}
 
 //Routes
 router.post('/', async function(req, res, next) {
