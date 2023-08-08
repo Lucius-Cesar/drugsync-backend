@@ -10,6 +10,7 @@ router.post("/", (req,res) => {
         !checkBody(req.body,[
             "name",
             "currentTreatment",
+            "pathologies"
         ])
     ){
         res.json({ result : false, error: "Missing , empty or incorrect field"})
@@ -39,7 +40,8 @@ router.post("/", (req,res) => {
 
         const newPatient = new Patient({
             name: req.body.name + nbr,
-            currentTreatment : drugIds
+            currentTreatment : drugIds,
+            pathologies: req.body.pathologies
         }) 
         
         newPatient.save().then((newDoc)=>{
@@ -50,6 +52,61 @@ router.post("/", (req,res) => {
     })
 
     })
+
+    // router qui va permettre d'afficher tous les patients 
+
+    router.get("/allPatients", (req,res)=>{
+        Patient.find()
+        .then(data=>{
+            res.json({patients : data})
+        })
+    })
+
+    //Récupérer les info relatives à un patient,utiliser un populate pour récupérer toutes les informations relatives au currentTreatment
+    router.get("/:name",(req,res)=>{
+        Patient.findOne({name : req.params.name})
+        .populate("currentTreatment")
+        .then(data=>{
+            res.json({infoPatients : data})
+        })
+    })
+
+    //Supprimer un patient
+    router.delete("/deletePatient/:name",(req,res)=>{
+        Patient.deleteOne({name : req.params.name})
+        .then(data=>{
+            if(data){
+                res.json({delete : true})
+            }
+            else{
+                res.json({delete : false})
+            }
+        })
+    })
+
+    //update patient pour pouvoir mettre a jour les currentTreatment et les pathologies
+
+    router.post("/updatePatient",(req,res)=>{
+
+        const currentTreatment = req.body.currentTreatment
+
+        Drug.find({
+            name: { $in: currentTreatment}
+        })
+        .then(drugs=>{
+            const drugIds = drugs.map(drug => drug._id)
+         
+        Patient.findOneAndUpdate(
+            {name : req.body.name},
+            { currentTreatment : drugIds,
+            pathologies: req.body.pathologies})
+        .then(data=>{
+            res.json({updatePatient : data})
+        })
+    })
+        })
+
+
 
 
     module.exports = router;
