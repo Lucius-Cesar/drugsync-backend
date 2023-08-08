@@ -6,12 +6,12 @@ const rxNavSchema = mongoose.Schema({
   });
 
 const drugSchema = mongoose.Schema({
-    name: String,
+    name:  { type: String, unique: true },
     rxNav: [rxNavSchema],
     chemblId: String,
     synonyms: [String],
-     tradeNames: [String],
-        drugbank: String,
+    tradeNames: [String],
+    drugbank: String,
         DDinter: String 
 })
 
