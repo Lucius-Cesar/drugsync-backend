@@ -3,7 +3,7 @@ const router = express.Router();
 const {uniqueObjectArray} = require('../modules/utils')
 const Drug = require("../models/drugs");
 const urlFirstPart = `https://rxnav.nlm.nih.gov/REST/interaction/list.json?rxcuis=`
-const severity = ['unknown', 'minor', 'moderate', 'major']
+const severity = ['unknown', 'minor', 'moderate', 'major']  
 
 
 //Route to check interactions inside current treatment + interactions with the treatment and the searched molecule
@@ -13,8 +13,8 @@ router.get('/:currentTreatment/:searched', (req, res) => {
       .then(data => {
         let currentTreatmentInteractions = [];
         let searchedInteractions = [];
-
-
+        !data.hasOwnProperty('fullInteractionTypeGroup') && res.json({result: true, currentTreatmentInteractions, searchedInteractions});
+        
         for (const group of data.fullInteractionTypeGroup) {
           for (const interactionType of group.fullInteractionType) {
             const isSearchedInteraction = interactionType.minConcept[0].rxcui === req.params.searched || 
