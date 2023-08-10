@@ -11,42 +11,46 @@ router.get('/:currentTreatment/:searched', (req, res) => {
     fetch(`${urlFirstPart}${req.params.currentTreatment}+${req.params.searched}&sources=drugbank`)
       .then(response => response.json())
       .then(data => {
+        console.log(data)
         let currentTreatmentInteractions = [];
         let searchedInteractions = [];
-        !data.hasOwnProperty('fullInteractionTypeGroup') && res.json({result: true, currentTreatmentInteractions, searchedInteractions});
-        
-        for (const group of data.fullInteractionTypeGroup) {
-          for (const interactionType of group.fullInteractionType) {
-            const isSearchedInteraction = interactionType.minConcept[0].rxcui === req.params.searched || 
-              interactionType.minConcept[1].rxcui === req.params.searched ? true : false
-            for (const interactionPair of interactionType.interactionPair) {
-              const drugA = interactionPair.interactionConcept[0].sourceConceptItem.name;
-              const drugB = interactionPair.interactionConcept[1].sourceConceptItem.name;
-              const description = interactionPair.description;
-              let interaction = { drugA, drugB, description}
+        if(!data.fullInteractionTypeGroup){
+          res.json({result: true, currentTreatmentInteractions, searchedInteractions})
+        }
+        else{
+          for (const group of data.fullInteractionTypeGroup) {
+            for (const interactionType of group.fullInteractionType) {
+              const isSearchedInteraction = interactionType.minConcept[0].rxcui === req.params.searched || 
+                interactionType.minConcept[1].rxcui === req.params.searched ? true : false
+              for (const interactionPair of interactionType.interactionPair) {
+                const drugA = interactionPair.interactionConcept[0].sourceConceptItem.name;
+                const drugB = interactionPair.interactionConcept[1].sourceConceptItem.name;
+                const description = interactionPair.description;
+                let interaction = { drugA, drugB, description}
 
-              isSearchedInteraction ? searchedInteractions.push(interaction) : currentTreatmentInteractions.push(interaction);  
+                isSearchedInteraction ? searchedInteractions.push(interaction) : currentTreatmentInteractions.push(interaction);  
+              }
             }
           }
+          //duplicated entries, no time to investigate why -> unique()
+          //later : buy API or use DDinter data. Currently we use random severity 
+          currentTreatmentInteractions = uniqueObjectArray(currentTreatmentInteractions).map(
+            interaction => {
+              const randomSeverityIndex = Math.floor(Math.random() * severity.length);
+              interaction.severity = severity[randomSeverityIndex]
+              return interaction
+            }
+          )
+          searchedInteractions = uniqueObjectArray(searchedInteractions).map(
+            interaction => {
+              const randomSeverityIndex = Math.floor(Math.random() * severity.length);
+              interaction.severity = severity[randomSeverityIndex]
+              return interaction
+            }
+            
+          )
+          res.json({ result: true, currentTreatmentInteractions, searchedInteractions});
         }
-        //duplicated entries, no time to investigate why -> unique()
-        //later : buy API or use DDinter data. Currently we use random severity 
-        currentTreatmentInteractions = uniqueObjectArray(currentTreatmentInteractions).map(
-          interaction => {
-            const randomSeverityIndex = Math.floor(Math.random() * severity.length);
-            interaction.severity = severity[randomSeverityIndex]
-            return interaction
-          }
-        )
-        searchedInteractions = uniqueObjectArray(searchedInteractions).map(
-          interaction => {
-            const randomSeverityIndex = Math.floor(Math.random() * severity.length);
-            interaction.severity = severity[randomSeverityIndex]
-            return interaction
-          }
-          
-        )
-        res.json({ result: true, currentTreatmentInteractions, searchedInteractions});
       })
   });
 
