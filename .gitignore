@@ -62,3 +62,4 @@ typings/
 
 #DDinter Database
 ./collections
+./collections/DDinter_csv_files
