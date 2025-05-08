@@ -61,5 +61,4 @@ typings/
 .next
 
 #DDinter Database
-collections/DDinter_csv_files/
-collections/DDinter.csv
+./collections
