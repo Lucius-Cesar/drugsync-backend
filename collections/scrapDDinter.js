@@ -78,8 +78,8 @@ throw new Error(`Failed to scrape interNumber ${interNumber} after ${maxRetries}
 }
 
 async function scrapeAndSaveData() {
-  const start = 1017338;
-  const end = 1027337;
+  const start = 1108202;
+  const end = 1117337;
   const interactionData = [];
 
   for (let i = start; i <= end; i++) {
@@ -119,3 +119,4 @@ scrapeAndSaveData();
 
 //  const start = 997392;
 // const end = 1097337;
+
